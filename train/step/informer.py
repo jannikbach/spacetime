@@ -41,6 +41,7 @@ def shared_step(model, dataloader, optimizer, scheduler, criterions, epoch,
         grad_enabled = False
         
     # Save predictions
+    total_x = []
     total_y_true = []
     total_y_pred = []
     total_y_true_informer = []
@@ -59,6 +60,7 @@ def shared_step(model, dataloader, optimizer, scheduler, criterions, epoch,
             
             # Only take in lag terms for input
             x = x[:, :model.lag, :]
+            x_context_before_transform = x
             
             # Transform batch data 
             u = input_transform(x)
@@ -140,10 +142,14 @@ def shared_step(model, dataloader, optimizer, scheduler, criterions, epoch,
             # Now save raw-scale metrics
             total_y_pred.append(dataloader.dataset.inverse_transform(y_c_horizon))
             total_y_true.append(dataloader.dataset.inverse_transform(y_t_horizon))
+
+            total_x.append(x_context_before_transform)
                          
     # Save predictions and compute aggregate metrics
     total_y_true_informer = torch.cat(total_y_true_informer, dim=0)
     total_y_pred_informer = torch.cat(total_y_pred_informer, dim=0)
+
+    total_x = torch.cat(total_x, dim=0)
     
     total_y = {'true': torch.cat(total_y_true, dim=0),
                'pred': torch.cat(total_y_pred, dim=0),
@@ -164,4 +170,4 @@ def shared_step(model, dataloader, optimizer, scheduler, criterions, epoch,
             metrics[k] = metric
             
     model.cpu()
-    return model, metrics, total_y
+    return model, metrics, total_y, total_x

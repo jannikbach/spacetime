@@ -1,5 +1,7 @@
 import os
 import copy
+from pathlib import Path
+
 import torch
 import numpy as np
 import pandas as pd
@@ -147,7 +149,7 @@ def main():
     eval_splits = ['eval_train', 'val', 'test']
     eval_loaders_by_split = {split: eval_loaders[ix] for ix, split in
                              enumerate(eval_splits)}
-    model, log_metrics, total_y = evaluate_model(model, dataloaders=eval_loaders_by_split, 
+    model, log_metrics, total_y, total_x = evaluate_model(model, dataloaders=eval_loaders_by_split,
                                                  optimizer=optimizer, scheduler=scheduler, 
                                                  criterions=eval_criterions, config=args,
                                                  epoch=args.best_val_metric_epoch, 
@@ -164,11 +166,16 @@ def main():
         wandb.log({"forecast_plot": fig})
         wandb.log(log_metrics)
 
-    #vizualize and log
 
+    file_path = Path(__file__)
+    file_path = file_path.parent / 'tmp' / (args.experiment_name + '.npz')
 
-    #save .npz
-                     
+    np.savez(file=str(file_path),
+             context=total_x['test'].numpy(),
+             ground_truth=total_y['test']['true'].numpy(),
+             predicted_output=total_y['test']['pred'].numpy(),
+             )
+
     
 if __name__ == '__main__':
     main()

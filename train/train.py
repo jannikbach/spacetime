@@ -58,7 +58,7 @@ def train_model(model, optimizer, scheduler, dataloaders_by_split,
                             description += f' | {split}/{metric_name}: {metric:.3f}'
             pbar.set_description(description)
 
-        _, metrics, y = run_epoch(model, dataloaders_by_split, optimizer, scheduler, 
+        _, metrics, y, _ = run_epoch(model, dataloaders_by_split, optimizer, scheduler,
                                   criterions, config, epoch, input_transform, output_transform,
                                   val_metric, wandb)
         

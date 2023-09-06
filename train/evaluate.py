@@ -12,7 +12,7 @@ def evaluate_model(model, **kwargs):
     model.eval()
     log_metrics = {}
     with torch.no_grad():
-        _, metrics, total_y = run_epoch(model, **kwargs)
+        _, metrics, total_y, total_x = run_epoch(model, **kwargs)
         
         # Print out and log evaluation metrics
         for split in metrics.keys():
@@ -23,7 +23,7 @@ def evaluate_model(model, **kwargs):
         if kwargs['wandb'] is not None:
             kwargs['wandb'].log(log_metrics)
                 
-    return model, log_metrics, total_y
+    return model, log_metrics, total_y, total_x
 
 
 def plot_forecasts(y_by_splits, splits, feature_dim=0, axes=None):
