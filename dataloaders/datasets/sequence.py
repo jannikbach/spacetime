@@ -42,6 +42,7 @@ class SequenceDataset:
         cls.registry[cls._name_] = cls
 
     def __init__(self, _name_, data_dir=None, tbptt=False, chunk_len=None, overlap_len=None, **dataset_cfg):
+        self.dataset_train_sub = None
         assert _name_ == self._name_
         self.data_dir = Path(data_dir).absolute() if data_dir is not None else None
 
@@ -70,13 +71,23 @@ class SequenceDataset:
 
     def split_train_val(self, val_split):
         train_len = int(len(self.dataset_train) * (1.0 - val_split))
-        self.dataset_train, self.dataset_val = torch.utils.data.random_split(
+        self.dataset_train_sub, self.dataset_val = torch.utils.data.random_split(
             self.dataset_train,
             (train_len, len(self.dataset_train) - train_len),
             generator=torch.Generator().manual_seed(
                 getattr(self, "seed", 42)
             ),  
         )
+
+        subsets = [self.dataset_train_sub, self.dataset_val]
+        for attr in dir(self.dataset_train):
+            if attr.startswith("_"):
+                continue
+            if not hasattr(torch.utils.data.Subset, attr):
+                for subset in subsets:
+                    setattr(subset, attr, getattr(self.dataset_train, attr))
+
+        self.dataset_train = self.dataset_train_sub
 
     @staticmethod
     def collate_fn(batch, resolution=1):

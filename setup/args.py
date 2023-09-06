@@ -76,7 +76,7 @@ def initialize_args():
     # Saving + logging
     parser.add_argument('--log_epoch', type=int, default=10)
     parser.add_argument('--no_wandb', action='store_true', default=False)
-    parser.add_argument('--wandb_entity', type=str, default='mzhang')
+    parser.add_argument('--wandb_entity', type=str, default='jannik-bach')
     parser.add_argument('--log_dir', type=str, default='./logs')
     parser.add_argument('--checkpoint_dir', type=str, default='./checkpoints')
 

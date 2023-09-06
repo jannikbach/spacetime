@@ -6,7 +6,7 @@ Code from https://github.com/HazyResearch/state-spaces/blob/main/src/dataloaders
 - Original dataset: https://github.com/zhouhaoyi/ETDataset
 - Original dataloader: https://github.com/zhouhaoyi/Informer2020
 """
-
+import pickle
 from typing import List
 import os
 import numpy as np
@@ -226,6 +226,20 @@ class StandardScaler:
             else self.std
         )
         return (data * std) + mean
+
+
+class DummyScaler:
+    def __init__(self):
+        pass
+
+    def fit(self, data):
+        pass
+
+    def transform(self, data):
+        return data
+
+    def inverse_transform(self, data, loc=None):
+        return data
 
 
 class InformerDataset(Dataset):
@@ -720,4 +734,328 @@ class Traffic(InformerSequenceDataset):
     variants = {
         0: "traffic.csv",
     }
-    
+
+
+class CustomRobotDataset(Dataset):
+    def __init__(
+            self,
+            target="mask_obs",
+            data_path=None,
+            pickle_file_name="SinData.pkl",
+            flag="train",
+            eval_mask=True,
+            train_test_border=700,
+            context_length=150,
+            **kwargs,
+    ):
+
+        super().__init__(**kwargs)
+        # init
+        assert flag in ["train", "test"]
+        type_map = {"train": 0, "test": 1}
+        self.set_type = type_map[flag]
+        assert target in ["obs", "mask_act", "all"]
+        target_map = {"obs": 0, "mask_act": 1, "all": 2}
+        self.set_target = target_map[target]
+        # [
+        # "obs": target is 9 dim observation vector,
+        # "mask_act": target is 13 dim vector with 9 dim observation and 4 dim zero masked action,
+        # "all": target is 13 dim vector with 9 dim observation and 4 dim action,
+        # ]
+        self.data_path = data_path
+        self.pickle_file_name = pickle_file_name
+        if self.data_path is None:
+            self.data_path = default_data_path
+        self.eval_mask = eval_mask
+        self.train_test_border = train_test_border
+        self.context_length = context_length
+        self.__read_data__()
+
+    def __read_data__(self):
+        self.scaler = DummyScaler()
+        # depending on the flag create the train, validation or test set
+
+        # Load the tensor from the file using pickle
+        complete_path = os.path.join(self.data_path, self.pickle_file_name)
+
+        with open(complete_path, 'rb') as f:
+            self.data_dict = pickle.load(f)
+            # print("Train Obs Shape", self.data_dict['train_obs'].shape)
+            # print("Train Act Shape", self.data_dict['train_act'].shape)
+            # print("Train Targets Shape", self.data_dict['train_targets'].shape)
+            # print("Test Obs Shape", self.data_dict['test_obs'].shape)
+            # print("Test Act Shape", self.data_dict['test_act'].shape)
+            # print("Test Targets Shape", self.data_dict['test_targets'].shape)
+            # print("Normalizer", self.data_dict['normalizer'])
+            # ignore target
+            # first 150 is context, next 750 is target
+            # takes around 2000 epochs to converge, start with 1000
+
+            # 750 batches: 700 train (0.1 train val split) 50 test
+
+        self.obs = self.data_dict['train_obs']
+        self.act = self.data_dict['train_act']
+
+        #scaler and fitting here
+        #
+        #
+        #
+        #
+
+        if self.set_type == 0:  # train
+            self.obs = self.obs[:self.train_test_border]
+            self.act = self.act[:self.train_test_border]
+        else:  # test
+            self.obs = self.obs[self.train_test_border:]
+            self.act = self.act[self.train_test_border:]
+
+        self.x = torch.cat((self.obs, self.act), dim=2)
+        self.x[:, self.context_length:, self.obs.shape[2]:] = 0
+
+        if self.set_target == 0:  # obs
+            self.y = self.obs
+        elif self.set_target == 1:  # mask_act
+            self.y = torch.cat((self.obs, torch.zeros(self.act.shape)), dim=2)
+        else:  # all
+            self.y = torch.cat((self.obs, self.act), dim=2)
+
+        self.y = self.y[:, self.context_length:, :]
+
+        # self.x = torch.cat((self.x, torch.zeros(self.obs.shape[0], self.obs.shape[1] - self.context_length,
+        #                                         self.obs.shape[2] + self.act.shape[2], dtype=torch.float32)),
+        #                    dim=1)
+
+        if self.eval_mask:
+            mask = torch.cat((torch.zeros(self.context_length), torch.ones(self.y.shape[1])), dim=0)
+        else:
+            mask = torch.cat((torch.zeros(self.context_length), torch.zeros(self.y.shape[1])), dim=0)
+        self.mask = mask[:, None]
+
+        print('set_type: ', self.set_type, ', x shape: ', self.x.shape)
+        print('set_type: ', self.set_type, ', y shape: ', self.y.shape)
+
+    def __getitem__(self, idx):
+        return self.x[idx], self.y[idx]
+
+    def __len__(self):
+        return self.x.shape[0]
+
+    def inverse_transform(self, data, loc=None):
+        return self.scaler.inverse_transform(data, loc)
+
+    @property
+    def d_input(self):
+        return self.x.shape[-1]  # i think this maybe has to be the number of input verctors (150, self.x.shape[1]) ???
+
+    # already forgot how the encoding and feeding to the model works...
+
+    @property
+    def d_output(self):
+        return self.y.shape[-1]
+
+    @property
+    def l_output(self):
+        return self.y.shape[1]
+
+
+class CustomRobotSequenceDataset(SequenceDataset):
+    _name_ = "robot"
+
+    _collate_arg_names = [
+        "mask"]  # ["mark", "mask"]  # Names of the two extra tensors that the InformerDataset returns
+
+    @property
+    def d_input(self):
+        return self.dataset_test.d_input
+        # I assume this is the dimension of the data that goes into the encoder, which in this case is
+        # feature dimension (1)
+
+    @property
+    def d_output(self):
+        return self.dataset_test.d_output
+        # prediction feature dimension (same as input dimension)
+
+    @property
+    def l_output(self):
+        return self.dataset_test.l_output
+        # this is the dimension the decoder should transfer to
+        # is will be [batch-size, l_output, d_output]
+
+    @property
+    def forecast_horizon(self):
+        return self.dataset_test.forecast_horizon
+
+    def setup(self):
+        self.dataset_train = CustomRobotDataset(
+            flag="train",
+            target=self.target,
+        )
+        # todo: change split to make sure the properties are accessible and correct
+        self.split_train_val(0.1)  # be careful, after the splitting the attributes are no longer accessible
+
+        self.dataset_test = CustomRobotDataset(
+            flag="test",
+            target=self.target,
+        )
+class CustomHalfCheetahDataset(Dataset):
+    def __init__(
+            self,
+            target="mask_obs",
+            data_path=None,
+            pickle_file_name="CheetahNeuripsData.pkl",
+            flag="train",
+            eval_mask=True,
+            train_test_border=4400,
+            context_length=60,
+            **kwargs,
+    ):
+
+        super().__init__(**kwargs)
+        # init
+        assert flag in ["train", "test"]
+        type_map = {"train": 0, "test": 1}
+        self.set_type = type_map[flag]
+        assert target in ["obs", "mask_act", "all"]
+        target_map = {"obs": 0, "mask_act": 1, "all": 2}
+        self.set_target = target_map[target]
+        # [
+        # "obs": target is 9 dim observation vector,
+        # "mask_act": target is 13 dim vector with 9 dim observation and 4 dim zero masked action,
+        # "all": target is 13 dim vector with 9 dim observation and 4 dim action,
+        # ]
+        self.data_path = data_path
+        self.pickle_file_name = pickle_file_name
+        if self.data_path is None:
+            self.data_path = default_data_path
+        self.eval_mask = eval_mask
+        self.train_test_border = train_test_border
+        self.context_length = context_length
+        self.__read_data__()
+
+    def __read_data__(self):
+        self.scaler = DummyScaler()
+        # depending on the flag create the train, validation or test set
+
+        # Load the tensor from the file using pickle
+        complete_path = os.path.join(self.data_path, self.pickle_file_name)
+
+        with open(complete_path, 'rb') as f:
+            self.data_dict = pickle.load(f)
+            # print("Train Obs Shape", self.data_dict['train_obs'].shape)
+            # print("Train Act Shape", self.data_dict['train_act'].shape)
+            # print("Train Targets Shape", self.data_dict['train_targets'].shape)
+            # print("Test Obs Shape", self.data_dict['test_obs'].shape)
+            # print("Test Act Shape", self.data_dict['test_act'].shape)
+            # print("Test Targets Shape", self.data_dict['test_targets'].shape)
+            # print("Normalizer", self.data_dict['normalizer'])
+            # ignore target
+            # first 60 is context, next 300 is target
+            # takes around 100 epochs to converge,
+
+            # 5000 batches: 4400 train (0.1 train val split) 600 test
+
+        self.obs = self.data_dict['train_obs']
+        self.act = self.data_dict['train_act']
+
+        # scaling and fitting here
+        # or let it be
+        #
+        #
+
+        if self.set_type == 0:  # train
+            self.obs = self.obs[:self.train_test_border]
+            self.act = self.act[:self.train_test_border]
+        else:  # test
+            self.obs = self.obs[self.train_test_border:]
+            self.act = self.act[self.train_test_border:]
+
+        self.x = torch.cat((self.obs, self.act), dim=2)
+        self.x[:, self.context_length:, self.obs.shape[2]:] = 0
+
+        if self.set_target == 0:  # obs
+            self.y = self.obs
+        elif self.set_target == 1:  # mask_act
+            self.y = torch.cat((self.obs, torch.zeros(self.act.shape)), dim=2)
+        else:  # all
+            self.y = torch.cat((self.obs, self.act), dim=2)
+
+        self.y = self.y[:, self.context_length:, :]
+
+        # self.x = torch.cat((self.x, torch.zeros(self.obs.shape[0], self.obs.shape[1] - self.context_length,
+        #                                         self.obs.shape[2] + self.act.shape[2], dtype=torch.float32)),
+        #                    dim=1)
+
+        if self.eval_mask:
+            mask = torch.cat((torch.zeros(self.context_length), torch.ones(self.y.shape[1])), dim=0)
+        else:
+            mask = torch.cat((torch.zeros(self.context_length), torch.zeros(self.y.shape[1])), dim=0)
+        self.mask = mask[:, None]
+
+        print('set_type: ', self.set_type, ', x shape: ', self.x.shape)
+        print('set_type: ', self.set_type, ', y shape: ', self.y.shape)
+
+    def __getitem__(self, idx):
+        return self.x[idx], self.y[idx]
+
+    def __len__(self):
+        return self.x.shape[0]
+
+    def inverse_transform(self, data, loc=None):
+        return self.scaler.inverse_transform(data, loc)
+
+    @property
+    def d_input(self):
+        return self.x.shape[-1]  # i think this maybe has to be the number of input verctors (150, self.x.shape[1]) ???
+
+    # already forgot how the encoding and feeding to the model works...
+
+    @property
+    def d_output(self):
+        return self.y.shape[-1]
+
+    @property
+    def l_output(self):
+        return self.y.shape[1]
+
+
+
+class CustomHalfCheetahSequenceDataset(SequenceDataset):
+    _name_ = "cheetah"
+
+    _collate_arg_names = [
+        "mask"]  # ["mark", "mask"]  # Names of the two extra tensors that the InformerDataset returns
+
+    @property
+    def d_input(self):
+        return self.dataset_test.d_input
+        # I assume this is the dimension of the data that goes into the encoder, which in this case is
+        # feature dimension (1)
+
+    @property
+    def d_output(self):
+        return self.dataset_test.d_output
+        # prediction feature dimension (same as input dimension)
+
+    @property
+    def l_output(self):
+        return self.dataset_test.l_output
+        # this is the dimension the decoder should transfer to
+        # is will be [batch-size, l_output, d_output]
+
+    @property
+    def forecast_horizon(self):
+        return self.dataset_test.forecast_horizon
+
+    def setup(self):
+        self.dataset_train = CustomHalfCheetahDataset(
+            flag="train",
+            target=self.target,
+        )
+        # todo: change split to make sure the properties are accessible and correct
+        self.split_train_val(0.1)  # be careful, after the splitting the attributes are no longer accessible
+
+        self.dataset_test = CustomHalfCheetahDataset(
+            flag="test",
+            target=self.target,
+        )
+

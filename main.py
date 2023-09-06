@@ -163,6 +163,11 @@ def main():
     if not args.no_wandb:
         wandb.log({"forecast_plot": fig})
         wandb.log(log_metrics)
+
+    #vizualize and log
+
+
+    #save .npz
                      
     
 if __name__ == '__main__':

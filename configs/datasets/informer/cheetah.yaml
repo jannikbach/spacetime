@@ -1,0 +1,6 @@
+_name_: cheetah
+target: obs  #[
+                  # "obs": target is 9 dim observation vector,
+                  # "mask_act": target is 13 dim vector with 9 dim observation and 4 dim zero masked action,
+                  # "all": target is 13 dim vector with 9 dim observation and 4 dim action,
+                  # ]

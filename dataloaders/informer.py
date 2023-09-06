@@ -1,7 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
-from dataloaders.datasets.informer import ETTHour, ETTMinute, ECL, Exchange, ILI, Traffic, Weather
+from dataloaders.datasets.informer import ETTHour, ETTMinute, ECL, Exchange, ILI, Traffic, Weather, CustomHalfCheetahSequenceDataset, CustomRobotSequenceDataset
 
 
 def get_dataset(name):
@@ -19,8 +19,12 @@ def get_dataset(name):
         return Traffic
     elif name == 'weather':
         return Weather
+    elif name == 'cheetah':
+        return CustomHalfCheetahSequenceDataset
+    elif name == 'robot':
+        return CustomRobotSequenceDataset
     else:
-        supported = ['etth', 'ettm', 'ecl', 'exchange', 'ili', 'traffic', 'weather']
+        supported = ['etth', 'ettm', 'ecl', 'exchange', 'ili', 'traffic', 'weather', 'cheetah', 'robot']
         raise NotImplementedError(f"Please check that name is in {supported}")
     
 

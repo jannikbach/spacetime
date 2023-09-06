@@ -34,6 +34,11 @@ def get_data_module(args):
         else:
             args.variant = None
         data_module = args.dataset_type
+
+    if args.dataset in ['cheetah', 'robot']:
+        args.dataset = args.dataset
+        args.dataset_type = 'informer'
+        data_module = args.dataset_type
     
     elif args.dataset in ['etth', 'ettm']:
         print(f'Dataset type: {args.dataset_type}')

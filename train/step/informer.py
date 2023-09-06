@@ -70,8 +70,9 @@ def shared_step(model, dataloader, optimizer, scheduler, criterions, epoch,
             # i.e., (y_c, y_o) = y_pred
             y_pred = [output_transform(_y) if _y is not None else _y 
                       for _y in y_pred]
-            y_c, y_o = y_pred 
-            y_t = torch.cat([x, y], dim=1)  # Supervise all time-steps
+            y_c, y_o = y_pred
+            y_t = torch.cat([x[:, :, :dataloader.dataset.d_output], y], dim=1)
+            # y_t = torch.cat([x, y], dim=1)  # Supervise all time-steps
             
             # config.criterion_weights specifies relative contribution for each loss component
             # - w0 weights loss over model predictions for horizon (future) terms
