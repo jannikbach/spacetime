@@ -150,8 +150,11 @@ def shared_step(model, dataloader, optimizer, scheduler, criterions, epoch,
     total_y_pred_informer = torch.cat(total_y_pred_informer, dim=0)
 
     total_x = torch.cat(total_x, dim=0)
+    true = torch.cat(total_y_true, dim=0)
+    print(true)
+    print(total_y_true_informer)
     
-    total_y = {'true': torch.cat(total_y_true, dim=0),
+    total_y = {'true': true,
                'pred': torch.cat(total_y_pred, dim=0),
                'true_informer': total_y_true_informer,
                'pred_informer': total_y_pred_informer}
