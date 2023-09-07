@@ -6,6 +6,8 @@ import torch
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
+import argparse
+
 
 from os.path import join
 
@@ -79,7 +81,7 @@ def update_args(args, updates):
 
 def main(updates):
     print_header('*** EXPERIMENT ARGS ***')
-    args = initialize_args()
+    args = argparse.Namespace() #initialize_args()
     #give main the slurm dict and update the args with the slurm dict
     update_args(args, updates)
     seed_everything(args.seed)
@@ -248,4 +250,5 @@ def main(updates):
 
     
 if __name__ == '__main__':
-    main(None)
+    args = initialize_args()
+    main(vars(args))

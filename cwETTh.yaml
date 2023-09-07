@@ -38,6 +38,43 @@ params:
   seed: 0
   data_transform: none
   wand_project_name: etth_cluster-spacetime
+  model: spacetime
+  preprocess_config: preprocess/default
+  n_kernels: None
+  n_heads: None
+  model_dim: None
+  input_dim: 1
+  activation: relu
+  layernorm: None
+  kernel_init: None
+  skip_ssm: None
+  mlp_n_layers: None
+  mlp_n_activations: None
+  mlp_preactivation: None
+  skip_mlp: None
+  dataset_type: None
+  variant: None
+  trainer: default
+  loader: default
+  num_workers: 2
+  data_dir: './data'
+  no_scale: False
+  inverse: False
+  optimizer: adamw
+  scheduler: timm_cosine
+  momentum: 0.0
+
+  # Saving + logging
+  log_epoch: 10
+  no_wandb: False
+  wandb_entity: 'jannik-bach'
+  log_dir: './logs'
+  checkpoint_dir: './checkpoints'
+  no_cuda: False
+  no_pin_memory: False
+  verbose: False
+  replicate: 0
+
 
 list:
   horizon: [720, 1440, 1920]
