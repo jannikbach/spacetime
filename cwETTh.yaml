@@ -37,6 +37,7 @@ params:
   criterion_weights: [1, 1, 1]
   seed: 0
   data_transform: none
+  wand_project_name: etth_cluster-spacetime
 
 list:
   horizon: [720, 1440, 1920]

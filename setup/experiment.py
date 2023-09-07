@@ -74,7 +74,10 @@ def initialize_experiment(args, experiment_name_id='',
     args.best_val_checkpoint_path   = join(args.checkpoint_dir, 
                                            f'bval-{args.experiment_name}.pth')
     # Logging
-    project_name = f'spacetime-d={args.dataset_name}-f={args.features}-horizon={args.horizon}'
+    if args.wand_project_name is None:
+        project_name = f'spacetime-d={args.dataset_name}-f={args.features}-horizon={args.horizon}'
+    else:
+        project_name = args.wand_project_name
     
     if not args.no_wandb:
         import wandb
