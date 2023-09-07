@@ -52,8 +52,7 @@ params:
   mlp_n_activations: None
   mlp_preactivation: None
   skip_mlp: None
-  dataset_type: None
-  variant: None
+  dataset_type: ''
   trainer: default
   loader: default
   num_workers: 2

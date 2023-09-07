@@ -65,7 +65,7 @@ def initialize_experiment(args, experiment_name_id='',
     
     checkpoint_dir = join(args.checkpoint_dir, args.dataset_name)
     if not os.path.isdir(checkpoint_dir):
-        os.makedirs(checkpoint_dir)
+        os.makedirs(checkpoint_dir, exist_ok=True)
         print(f'-> Created model checkpoint saving directory at {checkpoint_dir}!')
     args.checkpoint_dir = checkpoint_dir
     
@@ -74,12 +74,12 @@ def initialize_experiment(args, experiment_name_id='',
     args.best_val_checkpoint_path   = join(args.checkpoint_dir, 
                                            f'bval-{args.experiment_name}.pth')
     # Logging
-    if args.wand_project_name is None:
-        project_name = f'spacetime-d={args.dataset_name}-f={args.features}-horizon={args.horizon}'
-    else:
-        project_name = args.wand_project_name
-    
+    project_name = f'spacetime-d={args.dataset_name}-f={args.features}-horizon={args.horizon}'
+
+
     if not args.no_wandb:
+        if args.wand_project_name is None:
+            project_name = args.wand_project_name
         import wandb
         run_name = args.experiment_name
         wandb.init(config={},
@@ -94,7 +94,7 @@ def initialize_experiment(args, experiment_name_id='',
     # Local logging
     args.log_dir = join(args.log_dir, project_name)
     if not os.path.exists(args.log_dir):
-        os.makedirs(args.log_dir)
+        os.makedirs(args.log_dir, exist_ok=True)
         print(f'-> Created logging directory at {args.log_dir}!')
     log_id = args.experiment_name
     args.log_results_path = join(args.log_dir, f'r-{log_id}.csv')

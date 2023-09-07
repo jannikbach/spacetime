@@ -19,6 +19,7 @@ params:
   max_epochs: 200
   early_stopping_epochs: 10
   dataset: etth
+  dataset_type: informer
   lag: 384
   features: M
   embedding_config: embedding/repeat
@@ -30,8 +31,8 @@ params:
   norm_order: 1
   batch_size: 50
   dropout: 0.25
-  lr: 1e-3
-  weight_decay: 1e-4
+  lr: 0.001
+  weight_decay: 0.0001
   loss: rmse
   val_metric: informer_rmse
   criterion_weights: [1, 1, 1]
@@ -52,8 +53,7 @@ params:
   mlp_n_activations: None
   mlp_preactivation: None
   skip_mlp: None
-  dataset_type: None
-  variant: None
+  variant: 1
   trainer: default
   loader: default
   num_workers: 2
@@ -74,7 +74,6 @@ params:
   no_pin_memory: False
   verbose: False
   replicate: 0
-
 
 list:
   horizon: [720, 1440, 1920]
