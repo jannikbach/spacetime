@@ -11,7 +11,7 @@ sbatch_args:   # gpus need to be explicitly requested using this
   gres: "gpu:1" #and this
 ---
 name: "etth_cluster-spacetime"
-path: "/home/kit/anthropomatik/fu2759/state-spaces/out"
+path: "/home/kit/anthropomatik/fu2759/spacetime/out"
 repetitions: 1 # how many hyperparameter combinations should be tried? wieso denn 5 mal amk wenn ich doch nur ein 3x3 grid angebe. macht gar keinen sinn
 reps_per_job: 1 # 2 würde sequentiell die liste in einen job
 reps_in_parallel: 1
@@ -19,7 +19,7 @@ params:
   max_epochs: 200
   early_stopping_epochs: 10
   dataset: etth
-  lag: 150
+  lag: 384
   features: M
   embedding_config: embedding/repeat
   encoder_config: encoder/default_no_skip
@@ -36,7 +36,7 @@ params:
   val_metric: informer_rmse
   criterion_weights: [1, 1, 1]
   seed: 0
-  data_transform: none
+  data_transform: mean
 
 list:
   horizon: [720, 1440, 1920]

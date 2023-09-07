@@ -223,9 +223,9 @@ def main(updates):
 
 
     context = total_x['test'].numpy()
-    ground_truth = total_y['test']['true'].numpy(),
-    print(ground_truth)
+    ground_truth = total_y['test']['true'].numpy()
     predicted_output = total_y['test']['pred'].numpy()
+
 
     visualize_and_log(key='train',
                       context=context,
@@ -248,7 +248,4 @@ def main(updates):
 
     
 if __name__ == '__main__':
-    update_dict = {
-        'max_epochs': 20,
-    }
-    main(update_dict)
+    main(None)
