@@ -1,0 +1,43 @@
+---
+# Slurm config bwuni gpu
+name: "SLURM"   # MUST BE "SLURM"
+partition: "gpu_8"  # "single" for cpu, "gpu_4" or gpu_8" for gpu
+job-name: "test" # this will be the experiment's name in slurm
+num_parallel_jobs: 10  # max number of jobs executed in parallel
+ntasks: 1   #  leave that like it is
+cpus-per-task: 1   # there are 5 cores for each GPU on the gpu_8 queue and 10 per GPU on the gpu_4 queue. Never use 5! don't ask why!
+time: 300   # in minutes
+sbatch_args:   # gpus need to be explicitly requested using this
+  gres: "gpu:1" #and this
+---
+name: "etth_cluster-spacetime"
+path: "/home/kit/anthropomatik/fu2759/state-spaces/out"
+repetitions: 1 # how many hyperparameter combinations should be tried? wieso denn 5 mal amk wenn ich doch nur ein 3x3 grid angebe. macht gar keinen sinn
+reps_per_job: 1 # 2 würde sequentiell die liste in einen job
+reps_in_parallel: 1
+params:
+  max_epochs: 200
+  early_stopping_epochs: 10
+  dataset: etth
+  lag: 384
+  features: M
+  embedding_config: embedding/repeat
+  encoder_config: encoder/default_no_skip
+  decoder_config: decoder/default
+  output_config: output/default
+  n_blocks: 1
+  kernel_dim: 64
+  norm_order: 1
+  batch_size: 50
+  dropout: 0.25
+  lr: 1e-3
+  weight_decay: 1e-4
+  loss: rmse
+  val_metric: informer_rmse
+  criterion_weights: [1, 1, 1]
+  seed: 0
+  data_transform: none
+
+list:
+  horizon: [720, 1440, 1920]
+
