@@ -236,7 +236,7 @@ def main(updates):
     file_path = Path(__file__)
     file_path = file_path.parent / 'tmp' / (args.experiment_name + '.npz')
 
-    scale_path = file_path.parent / 'tmp' / 'scale.npz'
+    scale_path = file_path.parent / 'tmp' / 'scaler.npz'
 
     with np.load(scale_path) as data:
         mean = data['mean']
