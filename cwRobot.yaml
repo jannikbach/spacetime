@@ -10,7 +10,7 @@ time: 300   # in minutes #for one job or for all? i guess for one job
 sbatch_args:   # gpus need to be explicitly requested using this
   gres: "gpu:1" #and this
 ---
-name: "etth_cluster-spacetime"
+name: "spacetime-robot"
 path: "/home/kit/anthropomatik/fu2759/spacetime/out"
 repetitions: 1 # how many hyperparameter combinations should be tried? wieso denn 5 mal amk wenn ich doch nur ein 3x3 grid angebe. macht gar keinen sinn
 reps_per_job: 1 # 2 würde sequentiell die liste in einen job

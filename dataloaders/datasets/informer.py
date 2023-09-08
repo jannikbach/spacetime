@@ -382,7 +382,7 @@ class InformerDataset(Dataset):
 
             np.savez(file=str(file_path),
                      mean=self.scaler.mean,
-                     std=self.scaler.scale,
+                     std=self.scaler.std,
                      )
             print('scale saved')
             data = self.scaler.transform(df_data.values)  # Scaled down, should not be Y
