@@ -234,10 +234,13 @@ class StandardScalerImpl:
 
 class DummyScaler:
     def __init__(self):
-        pass
+        self.mean = Tensor(0.0)
+        self.std = Tensor(1.0)
 
     def fit(self, data):
-        pass
+        self.mean = torch.mean(data, dim=[0, 1])
+        self.std = torch.std(data, dim=[0, 1])
+
 
     def transform(self, data):
         return data
@@ -353,7 +356,7 @@ class InformerDataset(Dataset):
         return df_raw[["date"] + cols + [self.target]]
 
     def __read_data__(self):
-        self.scaler = StandardScaler()
+        self.scaler = StandardScalerImpl()
         df_raw = pd.read_csv(os.path.join(self.root_path, self.data_path))
 
         df_raw = self._process_columns(df_raw)
@@ -378,8 +381,8 @@ class InformerDataset(Dataset):
             file_path = file_path.parent.parent.parent / 'tmp' / 'scaler.npz'
 
             np.savez(file=str(file_path),
-                     mean=self.scaler.mean_,
-                     std=self.scaler.scale_,
+                     mean=self.scaler.mean,
+                     std=self.scaler.scale,
                      )
             print('scale saved')
             data = self.scaler.transform(df_data.values)  # Scaled down, should not be Y
@@ -872,7 +875,7 @@ class CustomRobotDataset(Dataset):
 
         np.savez(file=str(file_path),
                  mean=self.scaler.mean,
-                 std=self.scaler.scale,
+                 std=self.scaler.std,
                  )
         print('scale saved')
 
@@ -1039,6 +1042,18 @@ class CustomHalfCheetahDataset(Dataset):
             self.act = self.act[self.train_test_border:]
 
         self.x = torch.cat((self.obs, self.act), dim=2)
+        self.scaler.fit(self.x)
+
+        ### save mean and std
+
+        file_path = Path(__file__)
+        file_path = file_path.parent.parent.parent / 'tmp' / 'scaler.npz'
+
+        np.savez(file=str(file_path),
+                 mean=self.scaler.mean,
+                 std=self.scaler.std,
+                 )
+        print('scale saved')
 
         self.x[:, self.context_length:, :self.obs.shape[2]] = 0
         assert torch.all(torch.eq(self.x[:, :, -self.act.shape[2]:], self.act)).item()
