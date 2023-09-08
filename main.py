@@ -236,7 +236,7 @@ def main(updates):
     file_path = Path(__file__)
     file_path = file_path.parent / 'tmp' / (args.experiment_name + '.npz')
 
-    scale_path = file_path.parent / 'tmp' / 'scaler.npz'
+    scale_path = file_path.parent / 'scaler.npz'
 
     with np.load(scale_path) as data:
         mean = data['mean']
@@ -253,15 +253,15 @@ def main(updates):
              )
     print('filez saved')
 
-    visualize_and_log(key='test',
-                      context=context,
-                      ground_truth=ground_truth,
-                      predicted_output=predicted_output,
-                      context_length=int(args.lag),  # args.lag[0]
-                      prediction_length=predicted_output.shape[1],
-                      plot_count=3,
-                      logger=wandb,
-                      )
+    # visualize_and_log(key='test',
+    #                   context=context,
+    #                   ground_truth=ground_truth,
+    #                   predicted_output=predicted_output,
+    #                   context_length=int(args.lag),  # args.lag[0]
+    #                   prediction_length=predicted_output.shape[1],
+    #                   plot_count=3,
+    #                   logger=wandb,
+    #                   )
 
 
 
