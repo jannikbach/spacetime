@@ -57,7 +57,7 @@ def visualize_and_log(key, context, predicted_output, ground_truth, context_leng
                     begin_double_plot:end_double_plot],
                     label='Predicted')
             ax.plot(range(begin_double_plot, end_double_plot),
-                    np.concatenate((context[i, :, dim], ground_truth[0][i, :, dim]))[begin_double_plot:end_double_plot],
+                    np.concatenate((context[i, :, dim], ground_truth[i, :, dim]))[begin_double_plot:end_double_plot],
                     label='Ground Truth')
 
             # Set the x-axis range to be 0 to 150
@@ -231,7 +231,17 @@ def main(updates):
     ground_truth = total_y['test']['true'].numpy()
     predicted_output = total_y['test']['pred'].numpy()
 
-    visualize_and_log(key='train',
+    file_path = Path(__file__)
+    file_path = file_path.parent / 'tmp' / (args.experiment_name + '.npz')
+
+    np.savez(file=str(file_path),
+             context=context,
+             ground_truth=ground_truth,
+             predicted_output=predicted_output,
+             )
+    print('filez saved')
+
+    visualize_and_log(key='test',
                       context=context,
                       ground_truth=ground_truth,
                       predicted_output=predicted_output,
@@ -241,14 +251,6 @@ def main(updates):
                       logger=wandb,
                       )
 
-    file_path = Path(__file__)
-    file_path = file_path.parent / 'tmp' / (args.experiment_name + '.npz')
-
-    np.savez(file=str(file_path),
-             context=context,
-             ground_truth=ground_truth,
-             predicted_output=predicted_output,
-             )
 
 
 if __name__ == '__main__':

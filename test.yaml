@@ -20,14 +20,14 @@ val_metric: informer_rmse
 criterion_weights: [1, 1, 1]
 seed: 0
 data_transform: none
-wand_project_name: etth_cluster-spacetime
+wandb_project_name: etth_cluster-spacetime
 model: spacetime
 preprocess_config: preprocess/default
 n_kernels: None
 n_heads: None
 model_dim: None
 input_dim: 1
-activation: relu
+activation: gelu
 layernorm: None
 kernel_init: None
 skip_ssm: None
