@@ -353,7 +353,7 @@ class InformerDataset(Dataset):
         return df_raw[["date"] + cols + [self.target]]
 
     def __read_data__(self):
-        self.scaler = StandardScalerImpl()
+        self.scaler = StandardScaler()
         df_raw = pd.read_csv(os.path.join(self.root_path, self.data_path))
 
         df_raw = self._process_columns(df_raw)
@@ -371,6 +371,18 @@ class InformerDataset(Dataset):
         if self.scale:
             train_data = df_data[border1s[0] : border2s[0]]
             self.scaler.fit(train_data.values)
+            self.scaler.fit(self.x)
+
+            ### save mean and std
+
+            file_path = Path(__file__)
+            file_path = file_path.parent.parent.parent / 'tmp' / 'scaler.npz'
+
+            np.savez(file=str(file_path),
+                     mean=self.scaler.mean_,
+                     std=self.scaler.scale_,
+                     )
+            print('scale saved')
             data = self.scaler.transform(df_data.values)  # Scaled down, should not be Y
         else:
             data = df_data.values
