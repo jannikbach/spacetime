@@ -370,8 +370,7 @@ class InformerDataset(Dataset):
 
         if self.scale:
             train_data = df_data[border1s[0] : border2s[0]]
-            self.scaler.fit(train_data.values)
-            self.scaler.fit(self.x)
+            self.scaler.fit(train_data)
 
             ### save mean and std
 
@@ -826,7 +825,7 @@ class CustomRobotDataset(Dataset):
         self.__read_data__()
 
     def __read_data__(self):
-        self.scaler = StandardScaler()
+        self.scaler = DummyScaler()
         # depending on the flag create the train, validation or test set
 
         # Load the tensor from the file using pickle
@@ -872,12 +871,15 @@ class CustomRobotDataset(Dataset):
         file_path = file_path.parent.parent.parent / 'tmp' / 'scaler.npz'
 
         np.savez(file=str(file_path),
-                 mean=self.scaler.mean_,
-                 std=self.scaler.scale_,
+                 mean=self.scaler.mean,
+                 std=self.scaler.scale,
                  )
         print('scale saved')
 
-        self.x[:, self.context_length:, self.obs.shape[2]:] = 0
+        self.x[:, self.context_length:, :self.obs.shape[2]] = 0
+        assert torch.all(torch.eq(self.x[:, :, -self.act.shape[2]:], self.act)).item()
+        assert torch.all(torch.eq(self.x[:, :self.context_length, :self.obs.shape[2]], self.obs[:, :self.context_length, :])).item()
+        assert torch.all(torch.eq(self.x[:, self.context_length:, :self.obs.shape[2]], torch.zeros(size=[self.obs.shape[0], self.obs.shape[1] - self.context_length,self.obs.shape[1]]))).item()
 
         if self.set_target == 0:  # obs
             self.y = self.obs
@@ -1037,7 +1039,12 @@ class CustomHalfCheetahDataset(Dataset):
             self.act = self.act[self.train_test_border:]
 
         self.x = torch.cat((self.obs, self.act), dim=2)
-        self.x[:, self.context_length:, self.obs.shape[2]:] = 0
+
+        self.x[:, self.context_length:, :self.obs.shape[2]] = 0
+        assert torch.all(torch.eq(self.x[:, :, -self.act.shape[2]:], self.act)).item()
+        assert torch.all(torch.eq(self.x[:, :self.context_length, :self.obs.shape[2]], self.obs[:, :self.context_length, :])).item()
+        assert torch.all(torch.eq(self.x[:, self.context_length:, :self.obs.shape[2]], torch.zeros(size=[self.obs.shape[0], self.obs.shape[1] - self.context_length,self.obs.shape[2]]))).item()
+
 
         if self.set_target == 0:  # obs
             self.y = self.obs

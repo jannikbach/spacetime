@@ -1,8 +1,8 @@
 max_epochs: 200
 early_stopping_epochs: 10
-dataset: etth
+dataset: robot
 dataset_type: informer
-lag: 384
+lag: 150
 features: M
 embedding_config: embedding/repeat
 encoder_config: encoder/default_no_skip
@@ -56,4 +56,4 @@ no_cuda: False
 no_pin_memory: False
 verbose: False
 replicate: 0
-horizon: 720
+horizon: 750
