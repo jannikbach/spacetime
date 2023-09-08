@@ -231,13 +231,25 @@ def main(updates):
     ground_truth = total_y['test']['true'].numpy()
     predicted_output = total_y['test']['pred'].numpy()
 
+
+
     file_path = Path(__file__)
     file_path = file_path.parent / 'tmp' / (args.experiment_name + '.npz')
 
-    np.savez(file=str(file_path),
+    scale_path = file_path.parent / 'tmp' / 'scale.npz'
+
+    with np.load(scale_path) as data:
+        mean = data['mean']
+        std = data['std']
+
+    os.remove(scale_path)
+
+    np.savez(file=file_path.absolute(),
              context=context,
              ground_truth=ground_truth,
              predicted_output=predicted_output,
+             mean=mean,
+             std=std,
              )
     print('filez saved')
 

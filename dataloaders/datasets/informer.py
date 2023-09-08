@@ -7,13 +7,17 @@ Code from https://github.com/HazyResearch/state-spaces/blob/main/src/dataloaders
 - Original dataloader: https://github.com/zhouhaoyi/Informer2020
 """
 import pickle
+from pathlib import Path
 from typing import List
 import os
 import numpy as np
 import pandas as pd
+import sklearn.preprocessing
 from pandas.tseries import offsets
 from pandas.tseries.frequencies import to_offset
 import torch
+from sklearn.preprocessing import StandardScaler
+from torch import Tensor
 from torch.utils import data
 from torch.utils.data import Dataset, DataLoader
 
@@ -192,7 +196,7 @@ def time_features(dates, timeenc=1, freq="h"):
         ).transpose(1, 0)
 
 
-class StandardScaler:
+class StandardScalerImpl:
     def __init__(self):
         self.mean = 0.0
         self.std = 1.0
@@ -240,6 +244,44 @@ class DummyScaler:
 
     def inverse_transform(self, data, loc=None):
         return data
+
+
+class SaveScaler:
+
+    def __init__(self):
+        self.mean = Tensor(0.0)
+        self.std = Tensor(1.0)
+
+    def fit(self, data_tensor):
+        # immer nur obs fitter
+        # keep dim raus und dann unsqueeze in der mean dim
+
+        self.mean = torch.mean(data_tensor, dim=[0, 1])
+        self.std = torch.std(data_tensor, dim=[0, 1])
+
+
+
+        #
+        # self.mean = torch.mean(data_tensor, dim=1, keepdim=True)
+        # self.std = torch.std(data_tensor, dim=1, keepdim=True)
+
+    def transform(self, data_tensor):
+        #first obs then act
+        mean = self.mean[:data_tensor.shape[2]].unsqueeze(0).unsqueeze(1).expand_as(data_tensor)  # Shape: [10, 5, 8]
+        std = self.std[:data_tensor.shape[2]].unsqueeze(0).unsqueeze(1).expand_as(data_tensor)  # Shape: [10, 5, 8]
+
+        # self.mean = torch.mean(data_tensor, dim=1, keepdim=True)
+        # self.std = torch.std(data_tensor, dim=1, keepdim=True)
+        return torch.div(torch.sub(data_tensor, mean), std)
+
+    def inverse_transform(self, data_tensor):
+        #first obs then act
+        mean = self.mean[:data_tensor.shape[2]].unsqueeze(0).unsqueeze(1).expand_as(data_tensor)
+        std = self.std[:data_tensor.shape[2]].unsqueeze(0).unsqueeze(1).expand_as(data_tensor)
+
+        # self.mean = torch.mean(data_tensor, dim=1, keepdim=True)
+        # self.std = torch.std(data_tensor, dim=1, keepdim=True)
+        return torch.add(torch.mul(data_tensor, std), mean)
 
 
 class InformerDataset(Dataset):
@@ -311,7 +353,7 @@ class InformerDataset(Dataset):
         return df_raw[["date"] + cols + [self.target]]
 
     def __read_data__(self):
-        self.scaler = StandardScaler()
+        self.scaler = StandardScalerImpl()
         df_raw = pd.read_csv(os.path.join(self.root_path, self.data_path))
 
         df_raw = self._process_columns(df_raw)
@@ -772,7 +814,7 @@ class CustomRobotDataset(Dataset):
         self.__read_data__()
 
     def __read_data__(self):
-        self.scaler = DummyScaler()
+        self.scaler = StandardScaler()
         # depending on the flag create the train, validation or test set
 
         # Load the tensor from the file using pickle
@@ -810,6 +852,19 @@ class CustomRobotDataset(Dataset):
             self.act = self.act[self.train_test_border:]
 
         self.x = torch.cat((self.obs, self.act), dim=2)
+        self.scaler.fit(self.x)
+
+        ### save mean and std
+
+        file_path = Path(__file__)
+        file_path = file_path.parent.parent.parent / 'tmp' / 'scaler.npz'
+
+        np.savez(file=str(file_path),
+                 mean=self.scaler.mean_,
+                 std=self.scaler.scale_,
+                 )
+        print('scale saved')
+
         self.x[:, self.context_length:, self.obs.shape[2]:] = 0
 
         if self.set_target == 0:  # obs
