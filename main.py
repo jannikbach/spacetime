@@ -267,6 +267,6 @@ def main(updates):
 
 if __name__ == '__main__':
     args = initialize_args()
-    with open('test.yaml', 'r') as file:
+    with open('testcheetah.yaml', 'r') as file:
         cfg = yaml.safe_load(file)
     main(cfg)

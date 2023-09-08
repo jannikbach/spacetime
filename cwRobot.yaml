@@ -6,7 +6,7 @@ job-name: "test" # this will be the experiment's name in slurm
 num_parallel_jobs: 10  # max number of jobs executed in parallel
 ntasks: 1   #  leave that like it is
 cpus-per-task: 1   # there are 5 cores for each GPU on the gpu_8 queue and 10 per GPU on the gpu_4 queue. Never use 5! don't ask why!
-time: 300   # in minutes
+time: 300   # in minutes #for one job or for all? i guess for one job
 sbatch_args:   # gpus need to be explicitly requested using this
   gres: "gpu:1" #and this
 ---
@@ -16,18 +16,17 @@ repetitions: 1 # how many hyperparameter combinations should be tried? wieso den
 reps_per_job: 1 # 2 würde sequentiell die liste in einen job
 reps_in_parallel: 1
 params:
-  max_epochs: 200
+  max_epochs: 500
   early_stopping_epochs: 10
-  dataset: etth
+  dataset: cheetah
   dataset_type: informer
-  lag: 384
+  lag: 150
   features: M
   embedding_config: embedding/repeat
   encoder_config: encoder/default_no_skip
   decoder_config: decoder/default
   output_config: output/default
   n_blocks: 1
-  kernel_dim: 64
   norm_order: 1
   batch_size: 50
   dropout: 0.25
@@ -38,7 +37,7 @@ params:
   criterion_weights: [1, 1, 1]
   seed: 0
   data_transform: none
-  wandb_project_name: spacetime-etth
+  wandb_project_name: spacetime-cheetah
   model: spacetime
   preprocess_config: preprocess/default
   n_kernels: None
@@ -74,7 +73,9 @@ params:
   no_pin_memory: False
   verbose: False
   replicate: 0
+  horizon: 750
 
 list:
-  horizon: [720, 1440, 1920]
+  kernel_dim: [64, 128, 256, 512]
+
 

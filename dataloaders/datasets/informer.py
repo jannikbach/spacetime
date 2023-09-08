@@ -234,8 +234,8 @@ class StandardScalerImpl:
 
 class DummyScaler:
     def __init__(self):
-        self.mean = Tensor(0.0)
-        self.std = Tensor(1.0)
+        self.mean = Tensor([0.0])
+        self.std = Tensor([1.0])
 
     def fit(self, data):
         self.mean = torch.mean(data, dim=[0, 1])
@@ -252,8 +252,8 @@ class DummyScaler:
 class SaveScaler:
 
     def __init__(self):
-        self.mean = Tensor(0.0)
-        self.std = Tensor(1.0)
+        self.mean = Tensor([0.0])
+        self.std = Tensor([1.0])
 
     def fit(self, data_tensor):
         # immer nur obs fitter
@@ -882,7 +882,7 @@ class CustomRobotDataset(Dataset):
         self.x[:, self.context_length:, :self.obs.shape[2]] = 0
         assert torch.all(torch.eq(self.x[:, :, -self.act.shape[2]:], self.act)).item()
         assert torch.all(torch.eq(self.x[:, :self.context_length, :self.obs.shape[2]], self.obs[:, :self.context_length, :])).item()
-        assert torch.all(torch.eq(self.x[:, self.context_length:, :self.obs.shape[2]], torch.zeros(size=[self.obs.shape[0], self.obs.shape[1] - self.context_length,self.obs.shape[1]]))).item()
+        assert torch.all(torch.eq(self.x[:, self.context_length:, :self.obs.shape[2]], torch.zeros(size=[self.obs.shape[0], self.obs.shape[1] - self.context_length,self.obs.shape[2]]))).item()
 
         if self.set_target == 0:  # obs
             self.y = self.obs
