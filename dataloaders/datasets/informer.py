@@ -26,6 +26,38 @@ warnings.filterwarnings("ignore")
 
 from dataloaders.datasets import SequenceDataset, default_data_path
 
+def tensor_exists_within(A, B):
+    """
+    Check if tensor B exists within tensor A.
+
+    Args:
+    - A (torch.Tensor): The larger tensor
+    - B (torch.Tensor): The smaller tensor to search within A
+
+    Returns:
+    - bool: True if B exists within A, otherwise False
+    """
+    # Get the dimensions of tensors A and B
+    a_dims = A.shape
+    b_dims = B.shape
+
+    # Check if B can fit inside A
+    for a_dim, b_dim in zip(a_dims, b_dims):
+        if b_dim > a_dim:
+            return False
+
+    # Slide tensor B over tensor A
+    for i in range(a_dims[0] - b_dims[0] + 1):
+        for j in range(a_dims[1] - b_dims[1] + 1):
+            for k in range(a_dims[2] - b_dims[2] + 1):
+                # Extract sub-tensor from A
+                sub_A = A[i:i + b_dims[0], j:j + b_dims[1], k:k + b_dims[2]]
+                # Compare with B
+                if torch.equal(sub_A, B):
+                    return True
+    return False
+
+
 
 class TimeFeature:
     def __init__(self):
@@ -903,6 +935,8 @@ class CustomRobotDataset(Dataset):
             mask = torch.cat((torch.zeros(self.context_length), torch.zeros(self.y.shape[1])), dim=0)
         self.mask = mask[:, None]
 
+        assert not tensor_exists_within(self.x, self.y)
+
         print('set_type: ', self.set_type, ', x shape: ', self.x.shape)
         print('set_type: ', self.set_type, ', y shape: ', self.y.shape)
 
@@ -1079,6 +1113,8 @@ class CustomHalfCheetahDataset(Dataset):
         else:
             mask = torch.cat((torch.zeros(self.context_length), torch.zeros(self.y.shape[1])), dim=0)
         self.mask = mask[:, None]
+
+        assert not tensor_exists_within(self.x, self.y)
 
         print('set_type: ', self.set_type, ', x shape: ', self.x.shape)
         print('set_type: ', self.set_type, ', y shape: ', self.y.shape)

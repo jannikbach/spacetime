@@ -10,7 +10,7 @@ time: 300   # in minutes #for one job or for all? i guess for one job
 sbatch_args:   # gpus need to be explicitly requested using this
   gres: "gpu:1" #and this
 ---
-name: "spacetime-cheetah"
+name: "spaceTIME-cheetah"
 path: "/home/kit/anthropomatik/fu2759/spacetime/out"
 repetitions: 1 # how many hyperparameter combinations should be tried? wieso denn 5 mal amk wenn ich doch nur ein 3x3 grid angebe. macht gar keinen sinn
 reps_per_job: 1 # 2 würde sequentiell die liste in einen job
@@ -37,12 +37,11 @@ params:
   criterion_weights: [1, 1, 1]
   seed: 0
   data_transform: none
-  wandb_project_name: spacetime-cheetah
+  wandb_project_name: spaceTIME-cheetah
   model: spacetime
   preprocess_config: preprocess/default
   n_kernels: None
   n_heads: None
-  model_dim: None
   input_dim: 1
   activation: gelu
   layernorm: None
@@ -75,7 +74,8 @@ params:
   replicate: 0
   horizon: 300
 
-list:
-  kernel_dim: [32, 64, 128, 256]
+grid:
+  kernel_dim: [None, 32, 64, 128, 256]
+  model_dim: [None, 64, 128, 256, 512]
 
 

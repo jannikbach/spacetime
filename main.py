@@ -91,6 +91,8 @@ def main(updates):
     args = argparse.Namespace(**updates)  # initialize_args()
     #update_args(args, updates)
 
+    print(args)
+
     seed_everything(args.seed)
     experiment_configs = load_main_config(args, config_dir='./configs')
 
@@ -244,14 +246,17 @@ def main(updates):
 
     os.remove(scale_path)
 
-    np.savez(file=file_path.absolute(),
+    file = file_path.absolute()
+    print(file)
+
+    np.savez(file=file,
              context=context,
              ground_truth=ground_truth,
              predicted_output=predicted_output,
              mean=mean,
              std=std,
              )
-    print('filez saved')
+    print('all filez saved')
 
     # visualize_and_log(key='test',
     #                   context=context,
@@ -267,6 +272,6 @@ def main(updates):
 
 if __name__ == '__main__':
     args = initialize_args()
-    with open('testcheetah.yaml', 'r') as file:
-        cfg = yaml.safe_load(file)
-    main(cfg)
+    # with open('testcheetah.yaml', 'r') as file:
+    #     cfg = yaml.safe_load(file)
+    main(vars(args))

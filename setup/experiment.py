@@ -42,7 +42,7 @@ def initialize_experiment(args, experiment_name_id='',
     args.experiment_name = f'{experiment_name_id}-' if experiment_name_id != '' else ''
     
     args.dataset_name = args.dataset if args.variant is None else f'{args.dataset}{args.variant}'
-    args.experiment_name += f'm={args.model}'  # f'd={args.dataset_name}-m={args.model}'
+    args.experiment_name += f'd={args.dataset_name}-m={args.model}-md={args.model_dim}' # f'm={args.model}'  # f'd={args.dataset_name}-m={args.model}'
     try:
         args.criterion_weights = '+'.join(args.criterion_weights)
     except:
@@ -74,7 +74,7 @@ def initialize_experiment(args, experiment_name_id='',
     args.best_val_checkpoint_path   = join(args.checkpoint_dir, 
                                            f'bval-{args.experiment_name}.pth')
     # Logging
-    if args.wandb_project_name is None:
+    if not hasattr(args, 'wandb_project_name'):
         project_name = f'spacetime-d={args.dataset_name}-f={args.features}-horizon={args.horizon}'
     else:
         project_name = args.wandb_project_name
