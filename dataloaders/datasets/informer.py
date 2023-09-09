@@ -16,7 +16,6 @@ import sklearn.preprocessing
 from pandas.tseries import offsets
 from pandas.tseries.frequencies import to_offset
 import torch
-from sklearn.preprocessing import StandardScaler
 from torch import Tensor
 from torch.utils import data
 from torch.utils.data import Dataset, DataLoader
@@ -228,7 +227,7 @@ def time_features(dates, timeenc=1, freq="h"):
         ).transpose(1, 0)
 
 
-class StandardScalerImpl:
+class StandardScaler:
     def __init__(self):
         self.mean = 0.0
         self.std = 1.0
@@ -388,7 +387,7 @@ class InformerDataset(Dataset):
         return df_raw[["date"] + cols + [self.target]]
 
     def __read_data__(self):
-        self.scaler = StandardScalerImpl()
+        self.scaler = StandardScaler()
         df_raw = pd.read_csv(os.path.join(self.root_path, self.data_path))
 
         df_raw = self._process_columns(df_raw)
@@ -405,7 +404,7 @@ class InformerDataset(Dataset):
 
         if self.scale:
             train_data = df_data[border1s[0] : border2s[0]]
-            self.scaler.fit(train_data)
+            self.scaler.fit(train_data.values)
 
             ### save mean and std
 
